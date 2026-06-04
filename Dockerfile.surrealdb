@@ -1,5 +1,13 @@
-FROM surrealdb/surrealdb:latest
-LABEL version="2"
+# Multi-stage: copy surreal binary into Alpine so we have a shell for PORT substitution
+FROM surrealdb/surrealdb:latest AS surreal-bin
+
+FROM alpine:3.19
+COPY --from=surreal-bin /surreal /usr/local/bin/surreal
+RUN chmod +x /usr/local/bin/surreal
+
+# Railway injects PORT env var; SurrealDB needs it via --bind
+ENV PORT=8000
 EXPOSE 8000
-ENTRYPOINT ["surreal"]
-CMD ["start", "--log", "info", "--user", "root", "--pass", "root", "--bind", "0.0.0.0:8000", "memory"]
+
+# Shell script reads $PORT so Railway healthcheck works on the right port
+CMD ["sh", "-c", "surreal start --log info --user root --pass root --bind 0.0.0.0:${PORT} memory"]
