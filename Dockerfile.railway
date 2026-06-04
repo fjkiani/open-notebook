@@ -5,3 +5,7 @@ RUN pip install asyncpg==0.30.0
 
 # Copy ZIE plugin into the image
 COPY open_notebook/plugins/ /app/open_notebook/plugins/
+
+# Copy patched routers with ZIE fire-and-forget hooks
+COPY api/routers/chat.py /app/api/routers/chat.py
+COPY api/routers/source_chat.py /app/api/routers/source_chat.py
