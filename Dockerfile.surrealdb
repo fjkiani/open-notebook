@@ -2,6 +2,9 @@
 FROM surrealdb/surrealdb:latest AS surreal-bin
 
 FROM debian:bookworm-slim
+# Install CA certificates (required by SurrealDB for TLS)
+RUN apt-get update && apt-get install -y --no-install-recommends ca-certificates && rm -rf /var/lib/apt/lists/*
+
 # The surreal binary lives at /surreal in the scratch image
 COPY --from=surreal-bin /surreal /usr/local/bin/surreal
 RUN chmod +x /usr/local/bin/surreal
