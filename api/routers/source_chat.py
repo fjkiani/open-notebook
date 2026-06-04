@@ -448,6 +448,29 @@ async def stream_source_chat_response(
             ),
         )
 
+        # ZIE capture — fire-and-forget, never blocks streaming response
+        try:
+            import asyncio as _asyncio
+            from open_notebook.plugins.zie_capture import capture_qa_pair as _zie_capture
+            _ai_msgs = [
+                m for m in result.get("messages", [])
+                if hasattr(m, "type") and m.type == "ai"
+            ]
+            if _ai_msgs:
+                _ai_text = (
+                    _ai_msgs[-1].content
+                    if hasattr(_ai_msgs[-1], "content")
+                    else str(_ai_msgs[-1])
+                )
+                _asyncio.create_task(_zie_capture(
+                    question=message,
+                    fast_response=_ai_text,
+                    slow_response=_ai_text,   # v1: single model
+                    source_doc_ids=[source_id],
+                ))
+        except Exception as _zie_err:
+            logger.warning(f"[ZIE] source capture failed to schedule: {_zie_err}")
+
         # Stream the complete AI response
         if "messages" in result:
             for msg in result["messages"]:

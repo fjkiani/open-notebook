@@ -392,6 +392,33 @@ async def execute_chat(request: ExecuteChatRequest):
         # Update session timestamp
         await session.save()
 
+        # ZIE capture — fire-and-forget, never blocks user response
+        try:
+            import asyncio as _asyncio
+            from open_notebook.plugins.zie_capture import capture_qa_pair as _zie_capture
+            _ai_messages = [
+                m for m in result.get("messages", [])
+                if hasattr(m, "type") and m.type == "ai"
+            ]
+            if _ai_messages:
+                _ai_text = (
+                    _ai_messages[-1].content
+                    if hasattr(_ai_messages[-1], "content")
+                    else str(_ai_messages[-1])
+                )
+                _source_ids = [
+                    s.get("id", "") for s in (request.context or {}).get("sources", [])
+                    if isinstance(s, dict)
+                ]
+                _asyncio.create_task(_zie_capture(
+                    question=request.message,
+                    fast_response=_ai_text,
+                    slow_response=_ai_text,   # v1: single model, same response both slots
+                    source_doc_ids=_source_ids,
+                ))
+        except Exception as _zie_err:
+            logger.warning(f"[ZIE] capture failed to schedule: {_zie_err}")
+
         # Convert messages to response format
         messages: list[ChatMessage] = []
         for msg in result.get("messages", []):
