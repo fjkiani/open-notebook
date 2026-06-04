@@ -2,12 +2,13 @@
 FROM surrealdb/surrealdb:latest AS surreal-bin
 
 FROM alpine:3.19
+# The surreal binary lives at /surreal in the scratch image
 COPY --from=surreal-bin /surreal /usr/local/bin/surreal
-RUN chmod +x /usr/local/bin/surreal
+RUN chmod +x /usr/local/bin/surreal && /usr/local/bin/surreal --version
 
 # Railway injects PORT env var; SurrealDB needs it via --bind
 ENV PORT=8000
 EXPOSE 8000
 
-# Shell script reads $PORT so Railway healthcheck works on the right port
-CMD ["sh", "-c", "surreal start --log info --user root --pass root --bind 0.0.0.0:${PORT} memory"]
+# Use full path so sh can find the binary regardless of PATH
+CMD ["sh", "-c", "/usr/local/bin/surreal start --log info --user root --pass root --bind 0.0.0.0:${PORT} memory"]
