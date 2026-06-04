@@ -1,5 +1,6 @@
 # Multi-stage: copy surreal binary (glibc) into Debian slim for shell + PORT substitution
-FROM surrealdb/surrealdb:latest AS surreal-bin
+# IMPORTANT: open-notebook requires SurrealDB v2 syntax (FLEXIBLE TYPE, not TYPE FLEXIBLE)
+FROM surrealdb/surrealdb:v2 AS surreal-bin
 
 FROM debian:bookworm-slim
 # Install CA certificates (required by SurrealDB for TLS)
