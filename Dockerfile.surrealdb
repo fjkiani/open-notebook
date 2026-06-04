@@ -1,3 +1,5 @@
 FROM surrealdb/surrealdb:latest
+LABEL version="2"
+EXPOSE 8000
 ENTRYPOINT ["surreal"]
 CMD ["start", "--log", "info", "--user", "root", "--pass", "root", "--bind", "0.0.0.0:8000", "memory"]
