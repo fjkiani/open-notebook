@@ -1,14 +1,14 @@
-# Multi-stage: copy surreal binary into Alpine so we have a shell for PORT substitution
+# Multi-stage: copy surreal binary (glibc) into Debian slim for shell + PORT substitution
 FROM surrealdb/surrealdb:latest AS surreal-bin
 
-FROM alpine:3.19
+FROM debian:bookworm-slim
 # The surreal binary lives at /surreal in the scratch image
 COPY --from=surreal-bin /surreal /usr/local/bin/surreal
-RUN chmod +x /usr/local/bin/surreal && /usr/local/bin/surreal --version
+RUN chmod +x /usr/local/bin/surreal
 
 # Railway injects PORT env var; SurrealDB needs it via --bind
 ENV PORT=8000
 EXPOSE 8000
 
-# Use full path so sh can find the binary regardless of PATH
+# Shell reads $PORT so Railway healthcheck works on the correct port
 CMD ["sh", "-c", "/usr/local/bin/surreal start --log info --user root --pass root --bind 0.0.0.0:${PORT} memory"]
