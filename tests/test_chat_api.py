@@ -90,14 +90,8 @@ class TestExecuteChat:
 
     @pytest.mark.asyncio
     @patch("api.routers.chat.ChatSession.get", new_callable=AsyncMock)
-    async def test_session_not_found_returns_error(self, mock_session_get, client):
-        """Session not found → error response.
-
-        BUG: The router raises HTTPException(404) inside a try/except Exception block,
-        which catches HTTPException and re-wraps it as 500. The correct fix is to add
-        `except HTTPException: raise` before the catch-all. This test documents current
-        behavior so the bug is visible in CI.
-        """
+    async def test_session_not_found_returns_404(self, mock_session_get, client):
+        """Session not found → 404."""
         mock_session_get.return_value = None
 
         response = client.post(
@@ -109,10 +103,7 @@ class TestExecuteChat:
             },
         )
 
-        # Current behavior: 500 (bug — HTTPException swallowed by catch-all)
-        # Expected behavior: 404
-        # TODO: Fix router to add `except HTTPException: raise` before catch-all
-        assert response.status_code in (404, 500)
+        assert response.status_code == 404
         assert "Session not found" in response.json()["detail"]
 
     @pytest.mark.asyncio
@@ -296,13 +287,10 @@ class TestSessionCRUD:
 
     @pytest.mark.asyncio
     @patch("api.routers.chat.Notebook.get", new_callable=AsyncMock)
-    async def test_create_session_notebook_not_found_returns_error(
+    async def test_create_session_notebook_not_found_returns_404(
         self, mock_nb_get, client
     ):
-        """POST /chat/sessions with nonexistent notebook → error.
-
-        BUG: Same HTTPException-swallowing bug as execute_chat — 404 becomes 500.
-        """
+        """POST /chat/sessions with nonexistent notebook → 404."""
         mock_nb_get.return_value = None
 
         response = client.post(
@@ -310,8 +298,7 @@ class TestSessionCRUD:
             json={"notebook_id": "notebook:nonexistent"},
         )
 
-        # Current behavior: 500 (bug). Expected: 404.
-        assert response.status_code in (404, 500)
+        assert response.status_code == 404
 
     @pytest.mark.asyncio
     @patch("api.routers.chat.Notebook.get", new_callable=AsyncMock)
@@ -344,16 +331,12 @@ class TestSessionCRUD:
 
     @pytest.mark.asyncio
     @patch("api.routers.chat.Notebook.get", new_callable=AsyncMock)
-    async def test_get_sessions_notebook_not_found_returns_error(
+    async def test_get_sessions_notebook_not_found_returns_404(
         self, mock_nb_get, client
     ):
-        """GET /chat/sessions?notebook_id=... with nonexistent notebook → error.
-
-        BUG: Same HTTPException-swallowing bug — 404 becomes 500.
-        """
+        """GET /chat/sessions?notebook_id=... with nonexistent notebook → 404."""
         mock_nb_get.return_value = None
 
         response = client.get("/api/chat/sessions?notebook_id=notebook:nonexistent")
 
-        # Current behavior: 500 (bug). Expected: 404.
-        assert response.status_code in (404, 500)
+        assert response.status_code == 404
