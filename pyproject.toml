@@ -59,6 +59,8 @@ dev = [
     "ipywidgets>=8.1.5",
     "pre-commit>=4.0.1",
     "pytest>=9.0.3",
+    "pytest-asyncio>=0.23.0",
+    "anyio>=4.0.0",
 ]
 
 [build-system]
@@ -72,6 +74,9 @@ dev = [
     "ruff>=0.14.13",
     "types-requests>=2.32.4.20250913",
 ]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
 
 [tool.isort]
 profile = "black"
