@@ -11,8 +11,10 @@ COPY --from=surreal-bin /surreal /usr/local/bin/surreal
 RUN chmod +x /usr/local/bin/surreal
 
 # Railway injects PORT env var; SurrealDB needs it via --bind
+# /data is the Railway volume mount point (RocksDB persistence)
 ENV PORT=8000
 EXPOSE 8000
 
 # Shell reads $PORT so Railway healthcheck works on the correct port
-CMD ["sh", "-c", "/usr/local/bin/surreal start --log info --user root --pass root --bind 0.0.0.0:${PORT} memory"]
+# file:/data/notebook.db = RocksDB on the mounted volume (survives restarts)
+CMD ["sh", "-c", "/usr/local/bin/surreal start --log info --user root --pass root --bind 0.0.0.0:${PORT} file:/data/notebook.db"]
