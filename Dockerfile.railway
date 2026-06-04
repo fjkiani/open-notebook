@@ -1,7 +1,7 @@
 FROM lfnovo/open_notebook:v1-latest
 
-# Add asyncpg for ZIE capture hook (not in base image)
-RUN pip install asyncpg==0.30.0
+# Add asyncpg for ZIE capture hook — install into the app's venv, not system Python
+RUN /app/.venv/bin/pip install asyncpg==0.30.0
 
 # Copy ZIE plugin into the image
 COPY open_notebook/plugins/ /app/open_notebook/plugins/
